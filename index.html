@@ -1,0 +1,155 @@
+<html>
+  <head>
+    <title>Proration</title>
+  </head>
+  <body>
+    <h1>Proration Calculator</h1>
+    <div style="width:100%; float: left">
+    <h2>Monthly Proration Calculator</h2>
+    <div style="float:left; width: 600px">
+      <div style="width:40%; float:left; padding: 10px">
+        <h3>Current Subscription</h3>
+        <p>Start Date: <input type="text" id="mon_curr_start_date" placeholder="YYYY-MM-DD"></p>
+        <p>End Date: <input type="text" id="mon_curr_end_date" placeholder="YYYY-MM-DD"></p>
+        <p>Monthly Price: $<input type="number" id="mon_curr_mrr" placeholder="299"></p>
+      </div>
+      <div style="width:40%; float:left; padding: 10px">
+        <h3>Upgrade Subscription</h3>
+        <p>Start Date: <input type="text" id="mon_up_start_date" placeholder="YYYY-MM-DD"></p>
+        <p>End Date: <input type="text" id="mon_up_end_date" placeholder="YYYY-MM-DD"></p>
+        <p>Monthly Price: $<input type="number" id="mon_up_mrr" placeholder="299"></p>
+      </div>
+    </div>
+    <div style="float:left; width:100%">
+      <h3>Results</h3>
+      <p>Current Total Amount = $<span id='mon_curr_amount'></span></p>
+      <p>Overlap Months = <span id='mon_overlap'></span></p>
+      <p>Overlap Amount = $<span id='mon_overlap_amount'></span></p>
+      <p>Upgrade Total Amount = $<span id='mon_up_amount'></span></p>
+      <p>Prorated Amount = $<span id='mon_pro_amount'></span></p>
+      <p><button onclick="mon_pro()" style="font-size: 25px;">Calculate</button>
+    </div>
+    </div>
+    <div style="width:100%; float: left; padding-top: 60px;">
+    <h2>Annual Proration Calculator</h2>
+    <div style="float:left; width: 600px">
+      <div style="width:40%; float:left; padding: 10px">
+        <h3>Current Subscription</h3>
+        <p>Start Date: <input type="text" id="an_curr_start_date" placeholder="YYYY-MM-DD"></p>
+        <p>End Date: <input type="text" id="an_curr_end_date" placeholder="YYYY-MM-DD"></p>
+        <p>Annual Price: $<input type="number" id="an_curr_r" placeholder="299"></p>
+      </div>
+      <div style="width:40%; float:left; padding: 10px">
+        <h3>Upgrade Subscription</h3>
+        <p>Start Date: <input type="text" id="an_up_start_date" placeholder="YYYY-MM-DD"></p>
+        <p>End Date: <input type="text" id="an_up_end_date" placeholder="YYYY-MM-DD"></p>
+        <p>Annual Price: $<input type="number" id="an_up_r" placeholder="299"></p>
+      </div>
+    </div>
+    <div style="float:left; width:100%">
+      <h3>Results</h3>
+      <p>Current Total Amount = $<span id='an_curr_amount'></span></p>
+      <p>Overlap Days = <span id='an_overlap'></span></p>
+      <p>Overlap Amount = $<span id='an_overlap_amount'></span></p>
+      <p>Upgrade Total Amount = $<span id='an_up_amount'></span></p>
+      <p>Prorated Amount = $<span id='an_pro_amount'></span></p>
+      <p><button onclick="an_pro()" style="font-size: 25px;">Calculate</button>
+    </div>
+    </div>
+
+    <script type="text/javascript">
+      function an_pro() {
+        var curr_y = Number(daydiff(
+          new Date(Date.parse(document.getElementById('an_curr_start_date').value)),
+          new Date(Date.parse(document.getElementById('an_curr_end_date').value))
+        ).toFixed(0));
+        var up_y = Number(daydiff(
+          new Date(Date.parse(document.getElementById('an_up_start_date').value)),
+          new Date(Date.parse(document.getElementById('an_up_end_date').value))
+        ).toFixed(0));
+
+        if (!curr_y || !up_y) {
+          alert('Can\'t perform action due to improper dates');
+          return false;
+        }
+
+        var curr_end_y = new Date(Date.parse(document.getElementById('an_curr_end_date').value));
+        var up_start_y = new Date(Date.parse(document.getElementById('an_up_start_date').value));
+
+        var overlap_days = 0;
+        if (curr_end_y > up_start_y) {
+        	 var overlap_days = daydiff(curr_end_y, up_start_y);
+        }
+
+        var an_curr_r = Number(document.getElementById('an_curr_r').value);
+        var overlap_amount = overlap_days * Number((an_curr_r/365).toFixed(2));
+        var an_curr_amount = curr_y * Number((an_curr_r/365).toFixed(2));
+        var an_up_r = Number(document.getElementById('an_up_r').value);
+        var an_up_amount = up_y * Number((an_up_r/365).toFixed(2));
+        var prorated_amount = an_up_amount - an_curr_amount;
+        if (prorated_amount < 0) prorated_amount = 0;
+        document.getElementById('an_curr_amount').innerHTML = an_curr_amount.toFixed(2);
+        document.getElementById('an_overlap').innerHTML = overlap_days;
+        document.getElementById('an_overlap_amount').innerHTML = overlap_amount.toFixed(2);
+        document.getElementById('an_up_amount').innerHTML = an_up_amount.toFixed(2);
+        document.getElementById('an_pro_amount').innerHTML = prorated_amount.toFixed(2);
+      }
+      function mon_pro() {
+        var curr_months = calc_month(document.getElementById('mon_curr_start_date').value, document.getElementById('mon_curr_end_date').value);
+        var up_months = calc_month(document.getElementById('mon_up_start_date').value, document.getElementById('mon_up_end_date').value);
+        if (!curr_months || !up_months) {
+          alert('Can\'t perform action due to improper dates');
+          return false;
+        }
+
+        var curr_end_date = new Date(Date.parse(document.getElementById('mon_curr_end_date').value));
+        var up_start_date = new Date(Date.parse(document.getElementById('mon_up_start_date').value));
+
+        var overlap_month = 0;
+        if (curr_end_date > up_start_date) {
+        	 var overlap_month = calc_month(up_start_date, curr_end_date);
+        }
+        var mon_curr_mrr = Number(document.getElementById('mon_curr_mrr').value);
+        var overlap_amount = overlap_month * mon_curr_mrr;
+        var mon_curr_amount = curr_months * mon_curr_mrr;
+        var mon_up_mrr = Number(document.getElementById('mon_up_mrr').value);
+        var mon_up_amount = up_months * mon_up_mrr;
+        var prorated_amount = mon_up_amount - mon_curr_amount;
+        if (prorated_amount < 0) prorated_amount = 0;
+        document.getElementById('mon_curr_amount').innerHTML = mon_curr_amount;
+        document.getElementById('mon_overlap').innerHTML = overlap_month;
+        document.getElementById('mon_overlap_amount').innerHTML = overlap_amount;
+        document.getElementById('mon_up_amount').innerHTML = mon_up_amount;
+        document.getElementById('mon_pro_amount').innerHTML = prorated_amount;
+      }
+
+      function calc_month(start_date, end_date) {
+        try {
+          var start = new Date(Date.parse(start_date));
+          var end = new Date(Date.parse(end_date));
+        } catch (err) {
+          return false;
+        }
+
+        if (end < start) {
+          return false;
+        }
+        var diff = (end.getYear() - start.getYear()) * 12;
+        diff += (end.getMonth() - start.getMonth());
+        diff += Number(((end.getDate() - start.getDate()) / get_days_in_month(end)).toFixed(2));
+        return diff;
+      }
+
+      function get_days_in_month (cal_diff){
+    		var d = new Date(cal_diff.getFullYear(), cal_diff.getMonth()+1, 0);
+		    return d.getDate();
+			}
+
+      function daydiff(first, second) {
+        var timeDiff = Math.abs(second.getTime() - first.getTime());
+				var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        return diffDays;
+      }
+    </script>
+  </body>
+</html>
